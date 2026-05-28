@@ -1,0 +1,14 @@
+BibleGenius
+Copyright 2026 Rocktalk Holdings LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+This work builds on the Markdown Language Model framework
+(https://github.com/drew913s/MarkdownLanguageModel), also under Apache 2.0,
+copyright 2026 Rocktalk Holdings LLC.
+
+The King James Bible text is in the public domain.

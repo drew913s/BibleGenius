@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bible Genius — Deterministic KJV Concordance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --amber: #F59E0B; --amber-bright: #FBBF24; --amber-subtle: rgba(245,158,11,0.08);
+  --green: #10B981; --green-subtle: rgba(16,185,129,0.12);
+  --bg-deep: #0A0A0A; --bg: #0F0F10; --bg-elevated: #15151A; --bg-card: #1A1A20;
+  --bg-card-hover: #1F1F26; --bg-input: #131318;
+  --border: rgba(255,255,255,0.06); --border-strong: rgba(255,255,255,0.12);
+  --border-focus: rgba(245,158,11,0.4);
+  --text: #ECECF0; --text-secondary: #9CA3AF; --text-dim: #4A5263; --text-mono: #D4D4D8;
+  --error: #EF4444; --radius: 10px; --radius-sm: 6px; --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+.app { display: grid; grid-template-columns: 300px 1fr 420px; grid-template-rows: 56px 1fr; grid-template-areas: "header header header" "sidebar main provenance"; height: 100vh; }
+@media (max-width: 1100px) { .app { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr auto; grid-template-areas: "header" "sidebar" "main" "provenance"; } .sidebar { max-height: 200px; overflow-y: auto; } .provenance-panel { max-height: 40vh; } }
+
+.header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--bg-deep); border-bottom: 1px solid var(--border); z-index: 10; }
+.logo { display: flex; align-items: center; gap: 12px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+.logo-mark { width: 28px; height: 28px; background: var(--amber); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--bg-deep); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; }
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-text small { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 400; color: var(--text-secondary); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+.health-pills { display: flex; gap: 12px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+.pill strong { color: var(--text); font-weight: 600; }
+.pill.green strong { color: var(--green); }
+.pill.amber strong { color: var(--amber-bright); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
+
+.sidebar { grid-area: sidebar; background: var(--bg-elevated); border-right: 1px solid var(--border); padding: 16px 12px; overflow-y: auto; }
+.sidebar-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 8px 12px 6px; }
+.corpus-tree { margin-top: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.corpus-category { margin: 8px 0 2px; padding: 6px 12px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
+.corpus-file { display: block; padding: 4px 12px 4px 24px; color: var(--text-secondary); text-decoration: none; cursor: pointer; border-radius: var(--radius-sm); font-size: 11px; word-break: break-all; transition: var(--transition); }
+.corpus-file:hover { background: var(--bg-card); color: var(--amber-bright); }
+
+.main { grid-area: main; overflow-y: auto; padding: 32px 40px; background: var(--bg); }
+.intro { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+.intro-sub { color: var(--text-secondary); font-size: 13px; margin-bottom: 28px; max-width: 600px; }
+
+.form-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
+label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+input, select, textarea { width: 100%; padding: 11px 13px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 14px; transition: var(--transition); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--border-focus); background: var(--bg-card); }
+textarea { resize: vertical; min-height: 100px; font-family: 'DM Sans', sans-serif; }
+textarea.json { font-family: 'JetBrains Mono', monospace; font-size: 12px; min-height: 120px; }
+
+.submit-btn { margin-top: 6px; padding: 12px 24px; background: var(--amber); color: var(--bg-deep); border: none; border-radius: var(--radius-sm); font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; transition: var(--transition); }
+.submit-btn:hover { background: var(--amber-bright); }
+.submit-btn:disabled { background: var(--bg-card); color: var(--text-dim); cursor: not-allowed; }
+
+.output { margin-top: 28px; padding: 22px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); min-height: 80px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; }
+.output:empty::before { content: 'Response will appear here...'; color: var(--text-dim); font-style: italic; }
+.output-meta { display: flex; gap: 12px; align-items: center; margin-top: 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); flex-wrap: wrap; }
+.output-meta strong { color: var(--amber-bright); font-weight: 600; }
+.classification-badge { display: inline-block; padding: 3px 8px; background: var(--green-subtle); color: var(--green); border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.provenance-panel { grid-area: provenance; background: var(--bg-elevated); border-left: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+.provenance-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; }
+.provenance-title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.provenance-subtitle { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.provenance-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber-bright); font-weight: 600; }
+.provenance-list { flex: 1; overflow-y: auto; padding: 12px; }
+.provenance-empty { padding: 32px 20px; text-align: center; color: var(--text-dim); font-size: 12px; font-style: italic; }
+.prov-item { display: block; padding: 10px 12px; margin-bottom: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-mono); cursor: pointer; text-decoration: none; transition: var(--transition); word-break: break-all; }
+.prov-item:hover { background: var(--bg-card-hover); border-color: var(--amber-subtle); color: var(--amber-bright); }
+.prov-item-num { display: inline-block; width: 18px; color: var(--text-dim); }
+
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 40px; }
+.modal-bg.active { display: flex; }
+.modal { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius); width: 100%; max-width: 900px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+.modal-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-path { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--amber-bright); }
+.modal-close { background: transparent; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; padding: 0; line-height: 1; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 24px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; color: var(--text-mono); white-space: pre-wrap; }
+
+.loading { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--text-dim); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.example-q { display: inline-block; margin: 4px 6px 0 0; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; font-size: 11px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+.example-q:hover { color: var(--amber-bright); border-color: var(--amber-subtle); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">B</div>
+      <div class="logo-text">
+        Bible Genius
+        <small>King James Concordance · Zero LLM at Runtime</small>
+      </div>
+    </div>
+    <div class="health-pills">
+      <span class="pill green"><span class="dot"></span> <strong id="status">connecting</strong></span>
+      <span class="pill"><strong id="nodes">—</strong> nodes</span>
+      <span class="pill"><strong id="orchs">—</strong> orchestrations</span>
+      <span class="pill amber"><strong>LLM:</strong> NONE</span>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="sidebar-title">Browse Corpus</div>
+    <div class="corpus-tree" id="corpus-tree">
+      <div style="padding: 12px; color: var(--text-dim); font-size: 11px;">Loading...</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1 class="intro">Ask the scripture</h1>
+    <p class="intro-sub">Bible Genius is a Markdown Language Model serving all <strong>31,100 verses</strong> of the King James Bible as deterministic, audit-traceable corpus files. No LLM runs at inference time. No hallucination. Every word of every verse returned is a verse on disk — open any cited file in the right panel to read its raw source.</p>
+
+    <form id="form-run">
+      <div class="form-row">
+        <div>
+          <label for="orchestration">Orchestration</label>
+          <select id="orchestration" name="orchestration"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="question">Question (verse reference or topic)</label>
+          <textarea id="question" name="question" placeholder="e.g. John 3:16, or what does the bible say about forgiveness">John 3:16</textarea>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn">Run</button>
+
+      <div style="margin-top: 16px;">
+        <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px;">Try:</span>
+        <span class="example-q" data-q="John 3:16">John 3:16</span>
+        <span class="example-q" data-q="Genesis 1:1">Genesis 1:1</span>
+        <span class="example-q" data-q="1 Samuel 17:45">1 Samuel 17:45</span>
+        <span class="example-q" data-q="Psalm 23:1">Psalm 23:1</span>
+        <span class="example-q" data-q="what does the bible say about forgiveness">forgiveness</span>
+        <span class="example-q" data-q="verses about faith">faith</span>
+        <span class="example-q" data-q="the kingdom of heaven">kingdom</span>
+      </div>
+    </form>
+
+    <div id="output" class="output"></div>
+    <div id="meta" class="output-meta"></div>
+  </main>
+
+  <aside class="provenance-panel">
+    <div class="provenance-header">
+      <div>
+        <div class="provenance-title">Provenance</div>
+        <div class="provenance-subtitle">Files that contributed</div>
+      </div>
+      <span class="provenance-count" id="prov-count">0</span>
+    </div>
+    <div class="provenance-list" id="prov-list">
+      <div class="provenance-empty">Submit a request to see which markdown files contributed. Click any file to view its raw source.</div>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-path" id="modal-path"></span>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  if (attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') node.className = v;
+      else if (k === 'onclick') node.onclick = v;
+      else if (k === 'href') node.setAttribute('href', v);
+      else if (k === 'title') node.title = v;
+      else if (k === 'value') node.value = v;
+      else node.setAttribute(k, v);
+    }
+  }
+  for (const c of children) {
+    if (c == null) continue;
+    if (typeof c === 'string' || typeof c === 'number') node.appendChild(document.createTextNode(String(c)));
+    else node.appendChild(c);
+  }
+  return node;
+}
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+async function checkHealth() {
+  try {
+    const r = await fetch('/health');
+    const h = await r.json();
+    document.getElementById('status').textContent = h.status;
+    document.getElementById('nodes').textContent = h.corpus_nodes;
+    document.getElementById('orchs').textContent = h.orchestrations;
+  } catch (e) {
+    document.getElementById('status').textContent = 'offline';
+  }
+}
+checkHealth();
+
+async function loadOrchestrations() {
+  const sel = document.getElementById('orchestration');
+  try {
+    const r = await fetch('/api/orchestrations');
+    const orchs = await r.json();
+    orchs.forEach(o => sel.appendChild(el('option', {value: o.filename}, o.name || o.filename)));
+    if (orchs.length > 0) sel.value = orchs[0].filename;
+  } catch (e) {
+    sel.appendChild(el('option', {value: ''}, 'failed to load'));
+  }
+}
+loadOrchestrations();
+
+async function loadCorpus() {
+  const root = document.getElementById('corpus-tree');
+  try {
+    const r = await fetch('/api/corpus');
+    const tree = await r.json();
+    clear(root);
+    const order = ['orchestration','identity','books','topics','verses'];
+    const sortedKeys = Object.keys(tree).sort((a, b) => {
+      const ai = order.indexOf(a), bi = order.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+    sortedKeys.forEach(cat => {
+      const total = tree[cat].length;
+      root.appendChild(el('div', {class: 'corpus-category'}, `${cat} (${total.toLocaleString()})`));
+      // The verses category has 31,100 files — listing them all kills the DOM.
+      // Cap at 40 and tell the user to use the cited-files panel after a query.
+      const limit = cat === 'verses' ? 40 : total;
+      tree[cat].slice(0, limit).forEach(path => {
+        const filename = path.split('/').pop();
+        const link = el('a', {
+          class: 'corpus-file', href: '#', title: path,
+          onclick: (e) => { e.preventDefault(); showSource(path); },
+        }, cat === 'verses' ? path.replace(/^corpus\/verses\//, '').replace(/\.md$/, '') : filename);
+        root.appendChild(link);
+      });
+      if (cat === 'verses' && total > limit) {
+        root.appendChild(el('div', {style: 'padding:8px 16px;color:var(--text-dim);font-size:10px;font-style:italic;'},
+          `+${(total - limit).toLocaleString()} more verses — query above and click any cited file in the Provenance panel.`));
+      }
+    });
+  } catch (e) {
+    clear(root);
+    root.appendChild(el('div', {style: 'padding:12px;color:var(--error);font-size:11px;'}, 'Failed to load corpus'));
+  }
+}
+loadCorpus();
+
+function setProvenance(provenance) {
+  const list = document.getElementById('prov-list');
+  document.getElementById('prov-count').textContent = provenance.length;
+  clear(list);
+  if (!provenance || provenance.length === 0) {
+    list.appendChild(el('div', {class: 'provenance-empty'}, 'No provenance.'));
+    return;
+  }
+  provenance.forEach((path, i) => {
+    const item = el('a', {
+      class: 'prov-item', href: '#',
+      onclick: (e) => { e.preventDefault(); showSource(path); },
+    },
+      el('span', {class: 'prov-item-num'}, `${i + 1}.`),
+      path
+    );
+    list.appendChild(item);
+  });
+}
+
+function setMeta(metaEl, body) {
+  clear(metaEl);
+  if (body.classification) {
+    metaEl.appendChild(el('span', {class: 'classification-badge'}, body.classification));
+  }
+  const elapsed = body.elapsed_ms != null ? body.elapsed_ms : '?';
+  const provLen = (body.provenance || []).length;
+  metaEl.appendChild(el('span', null, el('strong', null, `${elapsed}ms`), ' elapsed'));
+  metaEl.appendChild(el('span', null, el('strong', null, String(provLen)), ' files cited'));
+}
+
+document.querySelectorAll('.example-q').forEach(span => {
+  span.onclick = () => {
+    document.getElementById('question').value = span.dataset.q;
+    document.getElementById('form-run').dispatchEvent(new Event('submit', {cancelable: true}));
+  };
+});
+
+document.getElementById('form-run').addEventListener('submit', async e => {
+  e.preventDefault();
+  const orchestration = document.getElementById('orchestration').value;
+  const question = document.getElementById('question').value;
+  const btn = e.target.querySelector('button[type=submit]');
+  const originalBtn = btn.textContent;
+  btn.disabled = true;
+  clear(btn);
+  btn.appendChild(el('span', {class: 'loading'}));
+  btn.appendChild(document.createTextNode('Running...'));
+
+  const outEl = document.getElementById('output');
+  const metaEl = document.getElementById('meta');
+  outEl.textContent = '';
+  clear(metaEl);
+
+  try {
+    const r = await fetch('/api/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({orchestration, inputs: {question}}),
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const body = await r.json();
+    outEl.textContent = body.output || '(empty response)';
+    setMeta(metaEl, body);
+    setProvenance(body.provenance || []);
+  } catch (err) {
+    outEl.textContent = 'Error: ' + err.message;
+    setProvenance([]);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalBtn;
+  }
+});
+
+async function showSource(path) {
+  document.getElementById('modal-path').textContent = path;
+  document.getElementById('modal-body').textContent = 'Loading...';
+  document.getElementById('modal-bg').classList.add('active');
+  try {
+    const r = await fetch('/api/source?path=' + encodeURIComponent(path));
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    document.getElementById('modal-body').textContent = text;
+  } catch (err) {
+    document.getElementById('modal-body').textContent = 'Failed to load: ' + err.message;
+  }
+}
+document.getElementById('modal-close').onclick = () => document.getElementById('modal-bg').classList.remove('active');
+document.getElementById('modal-bg').onclick = (e) => {
+  if (e.target.id === 'modal-bg') document.getElementById('modal-bg').classList.remove('active');
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('modal-bg').classList.remove('active');
+});
+</script>
+</body>
+</html>
