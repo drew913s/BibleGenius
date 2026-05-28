@@ -1,6 +1,10 @@
 # Bible Genius
 
+<a href="https://github.com/drew913s/MarkdownLanguageModel"><img src="https://raw.githubusercontent.com/drew913s/MarkdownLanguageModel/main/branding/marty-logo.svg" width="120" align="right" alt="Marked down by Marty"/></a>
+
 > A deterministic King James Bible concordance. **31,100 verses, zero LLM at inference time, ~30 ms per query, every word traceable to a file on disk.**
+
+**Marked down by [Markdown Marty](https://github.com/drew913s/MarkdownLanguageModel).** Bible Genius is what Marty built when you fed him a King James Bible — every verse atomized into a markdown node, every response composed by walking the graph, every word cited back to a file on disk.
 
 Bible Genius is a working implementation of the [Markdown Language Model](https://github.com/drew913s/MarkdownLanguageModel) framework over the entire King James Bible. The whole Bible is atomized into 31,100 markdown files — one per verse — plus 66 book index nodes and 30 curated topic clusters. The runtime walks the graph by keyword scoring and exact-path resolution. No model. No GPU. No tokenizer. No embeddings. No API calls.
 
